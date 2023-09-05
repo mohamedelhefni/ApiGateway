@@ -1,0 +1,60 @@
+_format_version: "2.1"
+
+services:
+
+- name: employees-server
+  url: http://192.168.1.8:8003
+  routes:
+  - name: employees
+    paths:
+    - /employees
+
+- name: products-server
+  url: http://192.168.1.8:8004
+  routes:
+  - name: products
+    paths:
+    - /products
+
+
+- name: orders-server
+  url: http://192.168.1.8:8005
+  routes:
+  - name: orders
+    paths:
+    - /orders
+
+
+
+
+# plugins section
+plugins:
+- name: correlation-id
+  config:
+    header_name: Request-ID
+    generator: tracker
+    echo_downstream: false
+- name: prometheus
+  config:
+    status_code_metrics: true
+    latency_metrics: true
+    bandwidth_metrics: true
+    upstream_health_metrics: true
+
+- name: proxy-cache
+  service: orders-server
+  config:
+    response_code:
+    - 200
+    request_method:
+    - GET
+    - HEAD
+    content_type:
+    - text/plain
+    - application/json
+    cache_ttl: 10
+    strategy: memory
+
+
+
+

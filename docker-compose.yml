@@ -1,0 +1,125 @@
+version: '3'
+
+services:
+  kong:
+    image: kong
+    container_name: kong
+    volumes:
+      - "./config:/usr/local/kong/declarative"
+    environment:
+      - KONG_DATABASE=off
+      - KONG_DECLARATIVE_CONFIG=/usr/local/kong/declarative/kong.yml
+      - KONG_PROXY_ACCESS_LOG=/dev/stdout
+      - KONG_ADMIN_ACCESS_LOG=/dev/stdout
+      - KONG_PROXY_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_LISTEN=0.0.0.0:8001, 0.0.0.0:8444 ssl
+      - KONG_LOG_LEVEL=debug
+      - KONG_PLUGINS=bundled
+    ports:
+      - "8000:8000/tcp"
+      - "127.0.0.1:7990:8001/tcp"
+      - "8001:8001/tcp"
+      - "8443:8443/tcp"
+      - "127.0.0.1:8444:8444/tcp"
+
+
+  # konga:
+  #   image: pantsel/konga
+  #   container_name: konga
+  #   restart: unless-stopped
+  #   environment:
+  #     - NODE_ENV=production
+  #     - DB_ADAPTER=sqlite3
+  #     - DB_URI=/app/database/konga.sqlite
+  #   volumes:
+  #     - .konga_data:/app/database
+
+  #   ports:
+  #     - "1337:1337"
+
+
+  employees-service:
+    build:
+      context: ./employee-service
+      network: host
+    command: uvicorn server:app --reload --workers 1 --host 0.0.0.0 --port 8003
+    ports:
+      - 8003:8003
+
+  products-service:
+    build:
+      context: ./product-service
+      network: host
+    command: uvicorn server:app --reload --workers 1 --host 0.0.0.0 --port 8004
+    ports:
+      - 8004:8004
+
+
+  orders-service:
+    build:
+      context: ./order-service
+      network: host
+    command: uvicorn server:app --reload --workers 1 --host 0.0.0.0 --port 8005
+    ports:
+      - 8005:8005
+
+
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - TERM=linux
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-polystat-panel
+    ports:
+      - '3000:3000'
+    volumes:
+      - 'grafana_storage:/var/lib/grafana'
+
+    network_mode: "host"
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    expose:
+      - "9100:9100"
+
+    network_mode: "host"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./config/prom.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    expose:
+      - "9090:9090"
+
+    network_mode: "host"
+
+volumes:
+  prometheus_data:
+    driver: local
+  grafana_storage:
+    driver: local
+  konga_data:
+    driver: local
