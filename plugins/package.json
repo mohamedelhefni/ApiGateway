@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29.2.2"
+  },
+  "dependencies": {
+    "kong-pdk": "file:.."
+  }
+}

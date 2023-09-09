@@ -2,10 +2,16 @@ version: '3'
 
 services:
   kong:
-    image: kong
+    # image: kong
+    build: 
+      context: . 
+      network: host
     container_name: kong
     volumes:
       - "./config:/usr/local/kong/declarative"
+      # - "./plugins/go-plugins/go-hello:/usr/local/bin/go-hello"
+      - "./plugins:/usr/local/kong/js-plugins"
+      - "/usr/local/bin/kong-js-pluginserver:/usr/local/bin/kong-js-pluginserver"
     environment:
       - KONG_DATABASE=off
       - KONG_DECLARATIVE_CONFIG=/usr/local/kong/declarative/kong.yml
@@ -15,13 +21,22 @@ services:
       - KONG_ADMIN_ERROR_LOG=/dev/stderr
       - KONG_ADMIN_LISTEN=0.0.0.0:8001, 0.0.0.0:8444 ssl
       - KONG_LOG_LEVEL=debug
-      - KONG_PLUGINS=bundled
+      - KONG_PLUGINSERVER_NAMES= js
+      - KONG_PLUGINSERVER_JS_SOCKET= /usr/local/kong/js_pluginserver.sock
+      - KONG_PLUGINSERVER_JS_START_CMD= /usr/local/bin/kong-js-pluginserver -v --plugins-directory /usr/local/kong/js-plugins
+      - KONG_PLUGINSERVER_JS_QUERY_CMD= /usr/local/bin/kong-js-pluginserver --plugins-directory /usr/local/kong/js-plugins --dump-all-plugins
+      - KONG_PLUGINS=bundled,clacks # there is issue making my plugin work here 
+      # - KONG_PLUGINSERVER_NAMES = go-hello
+      # - KONG_GO_PLUGINS_DIR=/usr/local/bin
+      # - KONG_PLUGINSERVER_GO_HELLO_QUERY_CMD=/usr/local/bin/go-hello -dump
     ports:
       - "8000:8000/tcp"
       - "127.0.0.1:7990:8001/tcp"
       - "8001:8001/tcp"
       - "8443:8443/tcp"
       - "127.0.0.1:8444:8444/tcp"
+    
+    # command: ["kong", "start", "--conf", "/etc/kong/kong.conf"]
 
 
   # konga:
