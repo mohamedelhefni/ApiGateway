@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String, JSON
@@ -9,7 +10,9 @@ from typing import List, Dict
 app = FastAPI()
 
 # SQLite database configuration
-DATABASE_URL = "sqlite:///../db/test.sqlite"
+
+DB_URI = os.getenv("DB_URI")
+DATABASE_URL = f"sqlite:///{DB_URI}"
 database = Database(DATABASE_URL)
 
 # SQLAlchemy models

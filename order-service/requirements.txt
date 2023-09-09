@@ -4,3 +4,6 @@ typing_extensions
 uvicorn
 sqlalchemy
 databases[sqlite]
+python-jose[cryptography]
+passlib
+

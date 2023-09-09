@@ -115,9 +115,9 @@ class UserCheck(BaseModel):
 async def check(user_check: UserCheck, username: str = Depends(verify_token)):
     print("user check", user_check)
     if username == 'hefni':
-        return {"is_authorized": True}
+        return {"is_authorized": True, "username": username }
     else:
-        return {"is_authorized": False}
+        return {"is_authorized": False, "username": username }
 
 
 # kegister a new user

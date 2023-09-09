@@ -3,8 +3,8 @@ version: '3'
 services:
   kong:
     # image: kong
-    build: 
-      context: . 
+    build:
+      context: .
       network: host
     container_name: kong
     volumes:
@@ -25,7 +25,7 @@ services:
       - KONG_PLUGINSERVER_JS_SOCKET= /usr/local/kong/js_pluginserver.sock
       - KONG_PLUGINSERVER_JS_START_CMD= /usr/local/bin/kong-js-pluginserver -v --plugins-directory /usr/local/kong/js-plugins
       - KONG_PLUGINSERVER_JS_QUERY_CMD= /usr/local/bin/kong-js-pluginserver --plugins-directory /usr/local/kong/js-plugins --dump-all-plugins
-      - KONG_PLUGINS=bundled,clacks # there is issue making my plugin work here 
+      - KONG_PLUGINS=bundled,clacks # there is issue making my plugin work here
       # - KONG_PLUGINSERVER_NAMES = go-hello
       # - KONG_GO_PLUGINS_DIR=/usr/local/bin
       # - KONG_PLUGINSERVER_GO_HELLO_QUERY_CMD=/usr/local/bin/go-hello -dump
@@ -35,7 +35,7 @@ services:
       - "8001:8001/tcp"
       - "8443:8443/tcp"
       - "127.0.0.1:8444:8444/tcp"
-    
+
     # command: ["kong", "start", "--conf", "/etc/kong/kong.conf"]
 
 
@@ -54,19 +54,16 @@ services:
   #     - "1337:1337"
 
 
-  employees-service:
-    build:
-      context: ./employee-service
-      network: host
-    command: uvicorn server:app --reload --workers 1 --host 0.0.0.0 --port 8003
-    ports:
-      - 8003:8003
-
   products-service:
     build:
       context: ./product-service
       network: host
     command: uvicorn server:app --reload --workers 1 --host 0.0.0.0 --port 8004
+    volumes:
+      - "./db:/app/mnt/db"
+      - "./product-service:/app"
+    environment:
+      - DB_URI=/app/mnt/db/test.sqlite
     ports:
       - 8004:8004
 
@@ -76,6 +73,11 @@ services:
       context: ./order-service
       network: host
     command: uvicorn server:app --reload --workers 1 --host 0.0.0.0 --port 8005
+    volumes:
+      - "./db:/app/mnt/db"
+      - "./order-service:/app"
+    environment:
+      - DB_URI=/app/mnt/db/test.sqlite
     ports:
       - 8005:8005
 

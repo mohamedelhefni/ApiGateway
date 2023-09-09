@@ -15,7 +15,12 @@ class KongPlugin {
       path: path
     })})
     let response = await request.json()
-    return response.is_authorized || false
+    let resBody = {
+      isAuthorized: response.is_authorized || false,
+      username: response.username || ""
+    }
+    console.log("REs Boyd", resBody)
+    return  resBody
   }
 
   async access(kong) {
@@ -35,11 +40,13 @@ class KongPlugin {
     }
 
     let isAuthorized = await  this.checkIsAuthorized(authCheck)
-    if(!isAuthorized) {
+    if(!isAuthorized.isAuthorized) {
       return kong.response.exit(403, "Forbidden")
     }
 
-    let message = this.config.message || "hello"
+    await kong.service.request.setHeader('user',  isAuthorized.username)
+
+    // let message = this.config.message || "hello"
 
 
 
