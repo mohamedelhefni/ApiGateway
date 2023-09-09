@@ -6,6 +6,7 @@
     "jest": "^29.2.2"
   },
   "dependencies": {
-    "kong-pdk": "file:.."
+    "kong-pdk": "file:..",
+    "node-fetch": "^3.3.2"
   }
 }

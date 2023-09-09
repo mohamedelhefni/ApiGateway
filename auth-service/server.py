@@ -22,7 +22,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Database connection URL (SQLite)
-DATABASE_URL = "sqlite:///./test.db"
+DATABASE_URL = "sqlite:///../db/test.db"
 
 # SQLAlchemy database engine and connection
 engine = create_engine(DATABASE_URL)
@@ -104,6 +104,21 @@ async def login_for_access_token(user_data: UserLogin):
 @app.get("/protected")
 async def protected_route(username: str = Depends(verify_token)):
     return {"message": f"Hello, {username}!"}
+
+
+class UserCheck(BaseModel):
+    token: str
+    path: str
+    method: str
+
+@app.post("/check")
+async def check(user_check: UserCheck, username: str = Depends(verify_token)):
+    print("user check", user_check)
+    if username == 'hefni':
+        return {"is_authorized": True}
+    else:
+        return {"is_authorized": False}
+
 
 # kegister a new user
 @app.post("/register")

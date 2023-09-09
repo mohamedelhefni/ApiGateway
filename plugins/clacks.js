@@ -7,28 +7,42 @@ class KongPlugin {
     this.config = config
   }
 
-  async checkIsAuthorized() {
-
+  async checkIsAuthorized(authProps) {
+    let {token, method, path} = authProps
+    let request = await fetch("http://192.168.1.3:4444/check/", {method: "POST", headers: {'Content-Type': 'application/json',Authorization: token}, body: JSON.stringify({
+      token: token,
+      method: method,
+      path: path
+    })})
+    let response = await request.json()
+    return response.is_authorized || false
   }
 
   async access(kong) {
     let host = await kong.request.getHost()
     let method = await kong.request.getMethod()
     let path = await kong.request.getPath()
-    // let path = await kong.request.getPath()
-    // let method = await kong.request.getMethod()
-    // if (host === undefined) {
-    //   return await kong.log.err("unable to get header for request")
-    // }
 
+    if(path == "/auth/token/" || path == '/auth/register/') {
+      console.log("it needs to return ")
+      return
+    }
 
+    let token = await kong.request.getHeader('Authorization')
+    let authCheck = {
+      token: token,
+      method: method,
+      path: path
+    }
 
-    console.log("Host", host)
-    console.log("Path",path)
-    console.log("Method", method)
-
+    let isAuthorized = await  this.checkIsAuthorized(authCheck)
+    if(!isAuthorized) {
+      return kong.response.exit(403, "Forbidden")
+    }
 
     let message = this.config.message || "hello"
+
+
 
     // the following can be "parallel"ed
     // await Promise.all([
@@ -37,7 +51,6 @@ class KongPlugin {
     //   kong.response.exit(403, "Forbidden")
     // ])
 
-    return kong.response.exit(403, "Forbidden")
 
   }
 }
