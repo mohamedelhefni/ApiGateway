@@ -2,3 +2,7 @@ fastapi
 pydantic
 typing_extensions
 uvicorn
+sqlalchemy
+databases[sqlite]
+
+

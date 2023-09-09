@@ -19,7 +19,6 @@ class KongPlugin {
   }
 
   async access(kong) {
-    let host = await kong.request.getHost()
     let method = await kong.request.getMethod()
     let path = await kong.request.getPath()
 

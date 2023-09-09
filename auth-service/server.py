@@ -22,7 +22,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Database connection URL (SQLite)
-DATABASE_URL = "sqlite:///../db/test.db"
+DATABASE_URL = "sqlite:///../db/test.sqlite"
 
 # SQLAlchemy database engine and connection
 engine = create_engine(DATABASE_URL)
