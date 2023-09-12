@@ -10,7 +10,8 @@ look at this video [What is gateway?](https://www.youtube.com/watch?v=6ULyxuHKxg
 * First Reason
 * Second
 
-
+## Read later
+https://blog.openpolicyagent.org/write-policy-in-opa-enforce-policy-in-sql-d9d24db93bf4
 
 
 ## Recommendations

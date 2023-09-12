@@ -49,6 +49,7 @@ async def create_order(order: Order, user: str = Depends(get_user)):
 # Retrieve all orders for the current user
 @app.get("/orders/")
 async def read_orders(user: str = Depends(get_user)):
+    print("user is ", user)
     query = OrderModel.__table__.select().where(OrderModel.username == user)
     orders_list = await database.fetch_all(query)
     # Create a list of dictionaries containing order ID and order details

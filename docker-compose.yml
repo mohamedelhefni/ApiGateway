@@ -11,7 +11,7 @@ services:
       - "./config:/usr/local/kong/declarative"
       # - "./plugins/go-plugins/go-hello:/usr/local/bin/go-hello"
       - "./plugins:/usr/local/kong/js-plugins"
-      - "/usr/local/bin/kong-js-pluginserver:/usr/local/bin/kong-js-pluginserver"
+      # - "/usr/local/bin/kong-js-pluginserver:/usr/local/bin/kong-js-pluginserver"
     environment:
       - KONG_DATABASE=off
       - KONG_DECLARATIVE_CONFIG=/usr/local/kong/declarative/kong.yml
@@ -52,6 +52,30 @@ services:
 
   #   ports:
   #     - "1337:1337"
+
+
+  opa:
+    image: openpolicyagent/opa
+    ports:
+      - 8181:8181
+    command: "run --server --log-level=debug --watch /data/simple.rego"
+    volumes:
+      - ./config/:/data
+    network_mode: "host"
+
+
+  auth-service:
+    build:
+      context: ./auth-service
+      network: host
+    command: uvicorn server:app --reload --workers 1 --host 0.0.0.0 --port 4444
+    volumes:
+      - "./db:/app/mnt/db"
+      - "./auth-service:/app"
+    environment:
+      - DB_URI=/app/mnt/db/test.sqlite
+    ports:
+      - 4444:4444
 
 
   products-service:

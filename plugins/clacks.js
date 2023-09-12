@@ -8,43 +8,51 @@ class KongPlugin {
   }
 
   async checkIsAuthorized(authProps) {
-    let {token, method, path} = authProps
-    let request = await fetch("http://192.168.1.3:4444/check/", {method: "POST", headers: {'Content-Type': 'application/json',Authorization: token}, body: JSON.stringify({
-      token: token,
-      method: method,
-      path: path
-    })})
+    console.log("Checking AUTH")
+    let { token, method, path } = authProps
+    let request = await fetch("http://192.168.1.8:8181/v1/data", {
+      method: "POST", headers: { 'Content-Type': 'application/json', Authorization: token }, body: JSON.stringify({
+        input: {
+          token: token,
+          method: method,
+          path: path
+        }
+      })
+    })
     let response = await request.json()
+    let res = response.result.envoy.http.roles
+    console.log("Respone from method", JSON.stringify(response))
     let resBody = {
-      isAuthorized: response.is_authorized || false,
-      username: response.username || ""
+      isAuthorized: res?.allow || false,
+      username: res?.claims?.username || "no user"
     }
     console.log("REs Boyd", resBody)
-    return  resBody
+    return resBody
   }
 
   async access(kong) {
     let method = await kong.request.getMethod()
     let path = await kong.request.getPath()
 
-    if(path == "/auth/token/" || path == '/auth/register/') {
+    if (path == "/auth/token/" || path == '/auth/register/') {
       console.log("it needs to return ")
       return
     }
 
     let token = await kong.request.getHeader('Authorization')
+    console.log("This is before check with token ", token)
     let authCheck = {
       token: token,
       method: method,
       path: path
     }
 
-    let isAuthorized = await  this.checkIsAuthorized(authCheck)
-    if(!isAuthorized.isAuthorized) {
+    let isAuthorized = await this.checkIsAuthorized(authCheck)
+    if (!isAuthorized.isAuthorized) {
       return kong.response.exit(403, "Forbidden")
     }
 
-    await kong.service.request.setHeader('user',  isAuthorized.username)
+    await kong.service.request.setHeader('user', isAuthorized.username)
 
     // let message = this.config.message || "hello"
 

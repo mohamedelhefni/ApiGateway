@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, Depends, HTTPException, Form
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
@@ -12,7 +13,7 @@ from pydantic import BaseModel
 # Configure FastAPI app
 app = FastAPI()
 
-# Secret key to sign JWT tokens (should be kept secret)
+# Secret key to sign JWT tokens i(should be kept secret)
 SECRET_KEY = "hefni-key"
 
 # Algorithm to use for JWT token signing
@@ -21,12 +22,13 @@ ALGORITHM = "HS256"
 # Token expiration time (in minutes)
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-# Database connection URL (SQLite)
-DATABASE_URL = "sqlite:///../db/test.sqlite"
+DB_URI = os.getenv("DB_URI")
+DATABASE_URL = f"sqlite:///{DB_URI}"
 
 # SQLAlchemy database engine and connection
 engine = create_engine(DATABASE_URL)
 metadata = MetaData()
+
 
 # Define the "users" table
 users = Table(
@@ -79,7 +81,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 def verify_token(token: str = Depends(OAuth2PasswordBearer(tokenUrl="token"))):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
+        username: str = payload.get("username")
         if username is None:
             raise HTTPException(status_code=400, detail="Invalid token")
     except JWTError:
@@ -98,7 +100,7 @@ async def login_for_access_token(user_data: UserLogin):
         raise HTTPException(status_code=401, detail="Incorrect username or password")
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(data={"sub": user_data.username}, expires_delta=access_token_expires)
+    access_token = create_access_token(data={"username": user_data.username}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 # Protected route that requires a valid JWT token
 @app.get("/protected")
@@ -111,14 +113,22 @@ class UserCheck(BaseModel):
     path: str
     method: str
 
+
+# Custom authorization check method.
+def check_authorization(path: str, method: str, user_role: str):
+    # Check if the user is authorized for the requested path and method.
+    if not enforcer.enforce(user_role, path, method):
+        raise HTTPException(status_code=403, detail="Unauthorized")
+
 @app.post("/check")
 async def check(user_check: UserCheck, username: str = Depends(verify_token)):
-    print("user check", user_check)
-    if username == 'hefni':
+    print("the user check ", user_check)
+    # print("user check", user_check)
+    # check_authorization(user_check.path, user_check.method, username)
+    if username  == 'hefni':
         return {"is_authorized": True, "username": username }
     else:
         return {"is_authorized": False, "username": username }
-
 
 # kegister a new user
 @app.post("/register")
